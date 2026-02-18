@@ -1,6 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
-import session from "express-session";
+import { type Server } from "http";
 import { storage } from "./storage";
 import { seedDatabase } from "./seed";
 import { scryptSync, randomBytes, timingSafeEqual } from "crypto";
@@ -19,26 +18,33 @@ function verifyPassword(password: string, stored: string): boolean {
   return timingSafeEqual(hashBuffer, testHash);
 }
 
-declare module "express-session" {
-  interface SessionData {
-    userId: number;
-  }
+const tokenStore = new Map<string, number>();
+
+function getUserIdFromRequest(req: Request): number | null {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7);
+  return tokenStore.get(token) ?? null;
 }
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
+  const userId = getUserIdFromRequest(req);
+  if (!userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
+  (req as any).userId = userId;
   next();
 }
 
 function requireRole(...roles: string[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.session.userId) return res.status(401).json({ message: "Unauthorized" });
-    const user = await storage.getUser(req.session.userId);
+    const userId = getUserIdFromRequest(req);
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    const user = await storage.getUser(userId);
     if (!user || !roles.includes(user.role)) {
       return res.status(403).json({ message: "Forbidden" });
     }
+    (req as any).userId = userId;
     next();
   };
 }
@@ -47,25 +53,6 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  const sessionSecret = process.env.SESSION_SECRET || "dev-secret-change-me";
-  const isProduction = process.env.NODE_ENV === "production";
-
-  app.set("trust proxy", 1);
-
-  app.use(
-    session({
-      secret: sessionSecret,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: true,
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-        sameSite: "none",
-      },
-    })
-  );
-
   await seedDatabase();
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
@@ -77,29 +64,31 @@ export async function registerRoutes(
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    req.session.userId = user.id;
-    req.session.save((err) => {
-      if (err) return res.status(500).json({ message: "Session error" });
-      const { passwordHash, ...safeUser } = user;
-      res.json(safeUser);
-    });
+    const token = randomBytes(32).toString("hex");
+    tokenStore.set(token, user.id);
+    const { passwordHash, ...safeUser } = user;
+    res.json({ ...safeUser, token });
   });
 
   app.post("/api/auth/logout", (req: Request, res: Response) => {
-    req.session.destroy(() => {});
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      tokenStore.delete(authHeader.slice(7));
+    }
     res.json({ ok: true });
   });
 
   app.get("/api/auth/me", async (req: Request, res: Response) => {
-    if (!req.session.userId) return res.status(401).json({ message: "Not authenticated" });
-    const user = await storage.getUser(req.session.userId);
+    const userId = getUserIdFromRequest(req);
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+    const user = await storage.getUser(userId);
     if (!user) return res.status(401).json({ message: "User not found" });
     const { passwordHash, ...safeUser } = user;
     res.json(safeUser);
   });
 
   app.get("/api/notifications", requireAuth, async (req: Request, res: Response) => {
-    const notifications = await storage.getNotificationsByUser(req.session.userId!);
+    const notifications = await storage.getNotificationsByUser((req as any).userId);
     res.json(notifications);
   });
 
@@ -109,12 +98,12 @@ export async function registerRoutes(
   });
 
   app.post("/api/notifications/read-all", requireAuth, async (req: Request, res: Response) => {
-    await storage.markAllNotificationsRead(req.session.userId!);
+    await storage.markAllNotificationsRead((req as any).userId);
     res.json({ ok: true });
   });
 
   app.get("/api/nurse/dashboard", requireAuth, async (req: Request, res: Response) => {
-    const user = await storage.getUser(req.session.userId!);
+    const user = await storage.getUser((req as any).userId);
     if (!user) return res.status(401).json({ message: "User not found" });
 
     const nurseId = user.role === "nurse" ? user.id : null;
@@ -197,7 +186,7 @@ export async function registerRoutes(
     const enrollment = await storage.getEnrollmentById(enrollmentId);
     if (!enrollment) return res.status(404).json({ message: "Enrollment not found" });
 
-    const user = await storage.getUser(req.session.userId!);
+    const user = await storage.getUser((req as any).userId);
     if (!user) return res.status(401).json({ message: "User not found" });
 
     if (user.role === "nurse" && enrollment.nurseUserId !== user.id) {
@@ -271,7 +260,7 @@ export async function registerRoutes(
     const enrollment = await storage.getEnrollmentById(p.enrollmentId);
     if (!enrollment) return res.status(404).json({ message: "Enrollment not found" });
 
-    const user = await storage.getUser(req.session.userId!);
+    const user = await storage.getUser((req as any).userId);
     if (!user || (user.role === "nurse" && enrollment.nurseUserId !== user.id)) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -317,7 +306,7 @@ export async function registerRoutes(
     const p = await storage.getProgressById(progressId);
     if (!p) return res.status(404).json({ message: "Not found" });
 
-    const user = await storage.getUser(req.session.userId!);
+    const user = await storage.getUser((req as any).userId);
     if (!user || (user.role !== "manager" && user.role !== "admin")) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -352,12 +341,12 @@ export async function registerRoutes(
     const p = await storage.getProgressById(progressId);
     if (!p) return res.status(404).json({ message: "Not found" });
 
-    const comment = await storage.addComment(progressId, req.session.userId!, text.trim());
+    const comment = await storage.addComment(progressId, (req as any).userId, text.trim());
     res.json(comment);
   });
 
   app.get("/api/manager/dashboard", requireAuth, async (req: Request, res: Response) => {
-    const user = await storage.getUser(req.session.userId!);
+    const user = await storage.getUser((req as any).userId);
     if (!user) return res.status(401).json({ message: "User not found" });
 
     let facilityIds: number[];
@@ -419,7 +408,7 @@ export async function registerRoutes(
   });
 
   app.get("/api/manager/signoff-queue", requireAuth, async (req: Request, res: Response) => {
-    const user = await storage.getUser(req.session.userId!);
+    const user = await storage.getUser((req as any).userId);
     if (!user || (user.role !== "manager" && user.role !== "admin")) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -468,7 +457,7 @@ export async function registerRoutes(
     const enrollment = await storage.getEnrollmentById(enrollmentId);
     if (!enrollment) return res.status(404).json({ message: "Not found" });
 
-    const user = await storage.getUser(req.session.userId!);
+    const user = await storage.getUser((req as any).userId);
     if (!user) return res.status(401).json({ message: "User not found" });
 
     if (user.role === "nurse" && enrollment.nurseUserId !== user.id) {
