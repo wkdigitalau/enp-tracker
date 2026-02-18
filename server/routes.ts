@@ -50,16 +50,18 @@ export async function registerRoutes(
   const sessionSecret = process.env.SESSION_SECRET || "dev-secret-change-me";
   const isProduction = process.env.NODE_ENV === "production";
 
+  app.set("trust proxy", 1);
+
   app.use(
     session({
       secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: isProduction,
+        secure: true,
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        sameSite: "lax",
+        sameSite: "none",
       },
     })
   );
