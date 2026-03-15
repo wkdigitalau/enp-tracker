@@ -4,12 +4,15 @@
 A digital competency tracking platform for nurses in Australian aged care, replacing paper-based tracking with a professional web dashboard. Supports the READY -> SIGN-OFF workflow with role-based access control.
 
 ## Recent Changes
+- 2026-03-15: Dark mode set as default theme per client feedback (Amy's branding preference)
+- 2026-03-15: Switched from session-cookie auth to bearer token auth (localStorage)
 - 2026-02-16: Initial MVP build with full schema, frontend, backend, auth, seed data
 
 ## Architecture
 - **Frontend:** React + Vite + Tailwind CSS + Shadcn/UI components + Wouter routing
-- **Backend:** Express.js with session-based auth + Drizzle ORM + PostgreSQL
-- **Auth:** Session-based with email/password, role-based access (nurse, manager, admin)
+- **Backend:** Express.js + Drizzle ORM + PostgreSQL
+- **Auth:** Bearer token auth (localStorage), role-based access (nurse, manager, admin)
+- **Theme:** Dark mode by default (client branding: white text on black background); toggle available
 
 ## Key Features
 - Role-based dashboards (Nurse, Manager, Admin)
