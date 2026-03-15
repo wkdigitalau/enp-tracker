@@ -21,6 +21,7 @@ import AdminUsersPage from "@/pages/admin-users";
 import AdminFacilitiesPage from "@/pages/admin-facilities";
 import AdminEnrollmentsPage from "@/pages/admin-enrollments";
 import AdminRBACPage from "@/pages/admin-rbac";
+import AdminDemoChecklist from "@/pages/admin-demo-checklist";
 import NotFound from "@/pages/not-found";
 
 function DashboardRouter() {
@@ -43,6 +44,7 @@ function AppRouter() {
       <Route path="/admin/facilities" component={AdminFacilitiesPage} />
       <Route path="/admin/enrollments" component={AdminEnrollmentsPage} />
       <Route path="/admin/rbac" component={AdminRBACPage} />
+      <Route path="/admin/demo" component={AdminDemoChecklist} />
       <Route component={NotFound} />
     </Switch>
   );

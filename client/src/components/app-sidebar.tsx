@@ -8,6 +8,7 @@ import {
   LogOut,
   Shield,
   ShieldCheck,
+  ListChecks,
   UserCircle,
 } from "lucide-react";
 import {
@@ -57,6 +58,7 @@ export function AppSidebar() {
     { title: "Facilities", url: "/admin/facilities", icon: Building2 },
     { title: "Enrollments", url: "/admin/enrollments", icon: ClipboardCheck },
     { title: "Access Control", url: "/admin/rbac", icon: ShieldCheck },
+    { title: "Demo Checklist", url: "/admin/demo", icon: ListChecks },
   ];
 
   const items =
