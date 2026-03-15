@@ -22,10 +22,13 @@ type NurseDetailData = {
   enrollment: {
     id: number;
     startDate: string;
+    endDate: string;
     facilityName: string;
     programName: string;
     nurseName: string;
     nurseEmail: string;
+    totalWeeks: number;
+    currentWeek: number;
   };
   progress: Array<{
     id: number;
@@ -136,8 +139,12 @@ export default function NurseDetailPage() {
                 {enrollment.nurseName}
               </h1>
               <p className="text-xs text-muted-foreground">
-                {enrollment.programName} &middot; {enrollment.facilityName} &middot;
-                Started {format(new Date(enrollment.startDate), "MMM d, yyyy")}
+                {enrollment.programName} &middot; {enrollment.facilityName}
+              </p>
+              <p className="text-xs text-muted-foreground" data-testid="text-nurse-timeline">
+                Week {enrollment.currentWeek} of {enrollment.totalWeeks} &middot;
+                Started {format(new Date(enrollment.startDate), "MMM d, yyyy")} &middot;
+                Ends {format(new Date(enrollment.endDate), "MMM d, yyyy")}
               </p>
             </div>
           </div>

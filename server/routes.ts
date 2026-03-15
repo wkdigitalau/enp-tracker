@@ -167,12 +167,19 @@ export async function registerRoutes(
       ).length,
     };
 
+    const maxWeek = allCompetencies.length > 0 ? Math.max(...allCompetencies.map(c => c.weekNumber)) : 50;
+    const endDate = addDays(new Date(enrollment.startDate), maxWeek * 7);
+    const currentWeek = Math.max(1, Math.min(maxWeek, Math.ceil(differenceInDays(now, new Date(enrollment.startDate)) / 7) + 1));
+
     res.json({
       enrollment: {
         id: enrollment.id,
         startDate: enrollment.startDate,
+        endDate: endDate.toISOString(),
         facilityName: facility?.name || "",
         programName: program?.name || "",
+        totalWeeks: maxWeek,
+        currentWeek: Math.min(currentWeek, maxWeek),
       },
       progress: progressWithDetails,
       stats,
@@ -382,12 +389,20 @@ export async function registerRoutes(
         if (p && p.status !== "signed_off" && dueDate < now) overdue++;
       }
 
+      const maxWeek = competenciesList.length > 0 ? Math.max(...competenciesList.map(c => c.weekNumber)) : 50;
+      const enrollEndDate = addDays(new Date(enrollment.startDate), maxWeek * 7);
+      const enrollCurrentWeek = Math.max(1, Math.min(maxWeek, Math.ceil(differenceInDays(now, new Date(enrollment.startDate)) / 7) + 1));
+
       nurses.push({
         enrollmentId: enrollment.id,
         nurseId: enrollment.nurseUserId,
         nurseName: nurse?.name || "Unknown",
         facilityId: enrollment.facilityId,
         facilityName: facility?.name || "",
+        startDate: enrollment.startDate,
+        endDate: enrollEndDate.toISOString(),
+        totalWeeks: maxWeek,
+        currentWeek: Math.min(enrollCurrentWeek, maxWeek),
         total: competenciesList.length,
         signedOff: progress.filter((p) => p.status === "signed_off").length,
         ready: progress.filter((p) => p.status === "ready").length,
@@ -509,14 +524,21 @@ export async function registerRoutes(
       ).length,
     };
 
+    const maxWeek = competenciesList.length > 0 ? Math.max(...competenciesList.map(c => c.weekNumber)) : 50;
+    const endDate = addDays(new Date(enrollment.startDate), maxWeek * 7);
+    const currentWeek = Math.max(1, Math.min(maxWeek, Math.ceil(differenceInDays(now, new Date(enrollment.startDate)) / 7) + 1));
+
     res.json({
       enrollment: {
         id: enrollment.id,
         startDate: enrollment.startDate,
+        endDate: endDate.toISOString(),
         facilityName: facility?.name || "",
         programName: program?.name || "",
         nurseName: nurse?.name || "",
         nurseEmail: nurse?.email || "",
+        totalWeeks: maxWeek,
+        currentWeek: Math.min(currentWeek, maxWeek),
       },
       progress,
       stats,

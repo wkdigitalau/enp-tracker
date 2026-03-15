@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Circle,
   ChevronRight,
+  Calendar,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, differenceInDays, addDays } from "date-fns";
@@ -19,8 +20,11 @@ type EnrollmentWithProgress = {
   enrollment: {
     id: number;
     startDate: string;
+    endDate: string;
     facilityName: string;
     programName: string;
+    totalWeeks: number;
+    currentWeek: number;
   };
   progress: Array<{
     id: number;
@@ -120,6 +124,28 @@ export default function NurseDashboard() {
             {enrollment.programName} &middot; {enrollment.facilityName}
           </p>
         </div>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Program Timeline</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+              <span>Started: {format(new Date(enrollment.startDate), "MMM d, yyyy")}</span>
+              <span data-testid="text-end-date">Ends: {format(new Date(enrollment.endDate), "MMM d, yyyy")}</span>
+            </div>
+            <Progress value={(enrollment.currentWeek / enrollment.totalWeeks) * 100} className="h-2 mb-1.5" />
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground" data-testid="text-current-week">
+                Week {enrollment.currentWeek} of {enrollment.totalWeeks}
+              </span>
+              <span className="text-muted-foreground">
+                {enrollment.totalWeeks - enrollment.currentWeek} weeks remaining
+              </span>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card>

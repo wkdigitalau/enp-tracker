@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Link } from "wouter";
+import { format } from "date-fns";
 
 type ManagerDashboardData = {
   facilities: Array<{ id: number; name: string }>;
@@ -31,6 +32,10 @@ type ManagerDashboardData = {
     nurseName: string;
     facilityId: number;
     facilityName: string;
+    startDate: string;
+    endDate: string;
+    totalWeeks: number;
+    currentWeek: number;
     total: number;
     signedOff: number;
     ready: number;
@@ -199,6 +204,11 @@ export default function ManagerDashboard() {
                             {nurse.overdue > 0 && (
                               <span className="text-destructive">{nurse.overdue} overdue</span>
                             )}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                            <span data-testid={`text-week-${nurse.nurseId}`}>Week {nurse.currentWeek} of {nurse.totalWeeks}</span>
+                            <span>&middot;</span>
+                            <span data-testid={`text-end-${nurse.nurseId}`}>Ends: {format(new Date(nurse.endDate), "MMM d, yyyy")}</span>
                           </div>
                         </div>
                         <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
