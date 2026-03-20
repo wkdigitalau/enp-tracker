@@ -75,6 +75,14 @@ export const notifications = pgTable("notifications", {
   readAt: timestamp("read_at"),
 });
 
+export const demoFeedback = pgTable("demo_feedback", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  section: text("section").notNull(),
+  authorName: text("author_name").notNull(),
+  text: text("text").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
 export const insertFacilitySchema = createInsertSchema(facilities).omit({ id: true });
 export const insertManagerFacilitySchema = createInsertSchema(managerFacilities).omit({ id: true });
@@ -84,6 +92,8 @@ export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id:
 export const insertCompetencyProgressSchema = createInsertSchema(competencyProgress).omit({ id: true });
 export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
+
+export const insertDemoFeedbackSchema = createInsertSchema(demoFeedback).omit({ id: true, createdAt: true });
 
 export const loginSchema = z.object({
   email: z.string().email(),
@@ -103,3 +113,5 @@ export type InsertCompetencyProgress = z.infer<typeof insertCompetencyProgressSc
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Notification = typeof notifications.$inferSelect;
+export type DemoFeedback = typeof demoFeedback.$inferSelect;
+export type InsertDemoFeedback = z.infer<typeof insertDemoFeedbackSchema>;

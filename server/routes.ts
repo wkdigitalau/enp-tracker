@@ -654,5 +654,30 @@ export async function registerRoutes(
     res.json(enrollment);
   });
 
+  app.get("/api/demo-feedback", requireAuth, async (_req: Request, res: Response) => {
+    const feedback = await storage.getAllDemoFeedback();
+    res.json(feedback);
+  });
+
+  app.post("/api/demo-feedback", requireAuth, async (req: Request, res: Response) => {
+    const userId = getUserIdFromRequest(req);
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(401).json({ error: "User not found" });
+
+    const { section, text } = req.body;
+    if (!section || !text) {
+      return res.status(400).json({ error: "section and text are required" });
+    }
+    const created = await storage.addDemoFeedback(section, user.name, text);
+    res.json(created);
+  });
+
+  app.delete("/api/demo-feedback/:id", requireAuth, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    await storage.deleteDemoFeedback(id);
+    res.json({ ok: true });
+  });
+
   return httpServer;
 }

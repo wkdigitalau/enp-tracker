@@ -4,6 +4,7 @@
 A digital competency tracking platform for nurses in Australian aged care, replacing paper-based tracking with a professional web dashboard. Supports the READY -> SIGN-OFF workflow with role-based access control.
 
 ## Recent Changes
+- 2026-03-20: Demo checklist accessible to all roles (nurse, manager, admin) with per-section feedback comments saved to DB
 - 2026-03-15: Dark mode set as default theme per client feedback (Amy's branding preference)
 - 2026-03-15: Switched from session-cookie auth to bearer token auth (localStorage)
 - 2026-02-16: Initial MVP build with full schema, frontend, backend, auth, seed data
@@ -33,6 +34,7 @@ A digital competency tracking platform for nurses in Australian aged care, repla
 - **competency_progress**: id, enrollment_id, competency_id, status, nurse_ready_at, signed_off_at, signed_off_by_user_id
 - **comments**: id, competency_progress_id, author_user_id, text, created_at
 - **notifications**: id, user_id, type, message, link, created_at, read_at
+- **demo_feedback**: id, section, author_name, text, created_at
 
 ## Demo Accounts
 - Admin: amy@enp.com / admin123

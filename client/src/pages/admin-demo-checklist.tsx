@@ -1,19 +1,24 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/lib/auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle2,
   Shield,
   Users,
   ClipboardCheck,
   Bell,
-  Building2,
   Calendar,
-  Eye,
-  Lock,
   AlertTriangle,
+  Send,
+  Trash2,
   MessageSquare,
 } from "lucide-react";
 
@@ -24,6 +29,7 @@ type CheckItem = {
 };
 
 type Section = {
+  key: string;
   title: string;
   icon: any;
   description: string;
@@ -31,8 +37,17 @@ type Section = {
   items: CheckItem[];
 };
 
+type FeedbackItem = {
+  id: number;
+  section: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+};
+
 const sections: Section[] = [
   {
+    key: "nurse-experience",
     title: "1. Nurse Experience",
     icon: Users,
     description: "Log in as a nurse to verify their dashboard and workflow.",
@@ -91,6 +106,7 @@ const sections: Section[] = [
     ],
   },
   {
+    key: "manager-experience",
     title: "2. Manager Experience",
     icon: ClipboardCheck,
     description: "Log in as a manager to verify oversight and sign-off capabilities.",
@@ -144,6 +160,7 @@ const sections: Section[] = [
     ],
   },
   {
+    key: "admin-experience",
     title: "3. Admin Experience",
     icon: Shield,
     description: "Log in as admin to verify full system control.",
@@ -187,6 +204,7 @@ const sections: Section[] = [
     ],
   },
   {
+    key: "notifications-workflow",
     title: "4. Notifications & Workflow",
     icon: Bell,
     description: "Verify the end-to-end notification flow works correctly.",
@@ -214,6 +232,7 @@ const sections: Section[] = [
     ],
   },
   {
+    key: "program-timeline",
     title: "5. Program Timeline & Dates",
     icon: Calendar,
     description: "Verify end dates and weekly progress tracking across all views.",
@@ -241,6 +260,7 @@ const sections: Section[] = [
     ],
   },
   {
+    key: "confirm-or-flag",
     title: "6. Confirm or Flag",
     icon: AlertTriangle,
     description: "Final confirmation items to discuss.",
@@ -273,6 +293,124 @@ const sections: Section[] = [
     ],
   },
 ];
+
+function SectionFeedback({ sectionKey }: { sectionKey: string }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [commentText, setCommentText] = useState("");
+
+  const { data: allFeedback = [] } = useQuery<FeedbackItem[]>({
+    queryKey: ["/api/demo-feedback"],
+  });
+
+  const sectionFeedback = allFeedback.filter((f) => f.section === sectionKey);
+
+  const addMutation = useMutation({
+    mutationFn: async (text: string) => {
+      await apiRequest("POST", "/api/demo-feedback", {
+        section: sectionKey,
+        text,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demo-feedback"] });
+      setCommentText("");
+      toast({ title: "Comment saved" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/demo-feedback/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demo-feedback"] });
+      toast({ title: "Comment deleted" });
+    },
+  });
+
+  const handleSubmit = () => {
+    const trimmed = commentText.trim();
+    if (!trimmed) return;
+    addMutation.mutate(trimmed);
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-border/50" data-testid={`feedback-section-${sectionKey}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <MessageSquare className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-sm font-medium">
+          Feedback & Comments
+          {sectionFeedback.length > 0 && (
+            <span className="ml-1.5 text-muted-foreground font-normal">({sectionFeedback.length})</span>
+          )}
+        </h3>
+      </div>
+
+      {sectionFeedback.length > 0 && (
+        <div className="space-y-2 mb-3">
+          {sectionFeedback.map((fb) => (
+            <div
+              key={fb.id}
+              className="flex items-start gap-2 p-2.5 rounded-md bg-muted/30 border border-border/30"
+              data-testid={`feedback-item-${fb.id}`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-medium">{fb.authorName}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(fb.createdAt).toLocaleDateString("en-AU", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{fb.text}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={() => deleteMutation.mutate(fb.id)}
+                disabled={deleteMutation.isPending}
+                data-testid={`delete-feedback-${fb.id}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Textarea
+          placeholder="Add feedback, questions, or notes for this section..."
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          className="min-h-[60px] text-sm resize-none"
+          data-testid={`input-feedback-${sectionKey}`}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+        />
+        <Button
+          size="icon"
+          className="h-[60px] w-10 flex-shrink-0"
+          onClick={handleSubmit}
+          disabled={!commentText.trim() || addMutation.isPending}
+          data-testid={`button-submit-feedback-${sectionKey}`}
+        >
+          <Send className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDemoChecklist() {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -309,7 +447,7 @@ export default function AdminDemoChecklist() {
         {sections.map((section) => {
           const sectionChecked = section.items.filter((i) => checked[i.id]).length;
           return (
-            <Card key={section.title}>
+            <Card key={section.key}>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <section.icon className="w-5 h-5 text-primary" />
@@ -325,35 +463,39 @@ export default function AdminDemoChecklist() {
                   </p>
                 )}
               </CardHeader>
-              <CardContent className="space-y-3">
-                {section.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`flex gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
-                      checked[item.id]
-                        ? "bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200/50 dark:border-emerald-800/30"
-                        : "border-border/50 hover:bg-muted/30"
-                    }`}
-                    onClick={() => toggle(item.id)}
-                    data-testid={`check-${item.id}`}
-                  >
-                    <Checkbox
-                      checked={!!checked[item.id]}
-                      onCheckedChange={() => {}}
-                      onClick={(e) => e.stopPropagation()}
-                      className="mt-0.5 pointer-events-none"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium ${checked[item.id] ? "line-through text-muted-foreground" : ""}`}>
-                        {item.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+              <CardContent>
+                <div className="space-y-3">
+                  {section.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`flex gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
+                        checked[item.id]
+                          ? "bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200/50 dark:border-emerald-800/30"
+                          : "border-border/50 hover:bg-muted/30"
+                      }`}
+                      onClick={() => toggle(item.id)}
+                      data-testid={`check-${item.id}`}
+                    >
+                      <Checkbox
+                        checked={!!checked[item.id]}
+                        onCheckedChange={() => {}}
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-0.5 pointer-events-none"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium ${checked[item.id] ? "line-through text-muted-foreground" : ""}`}>
+                          {item.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+                      </div>
+                      {checked[item.id] && (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      )}
                     </div>
-                    {checked[item.id] && (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                <SectionFeedback sectionKey={section.key} />
               </CardContent>
             </Card>
           );

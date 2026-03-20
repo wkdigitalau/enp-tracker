@@ -44,11 +44,13 @@ export function AppSidebar() {
 
   const nurseItems = [
     { title: "My Dashboard", url: "/", icon: LayoutDashboard },
+    { title: "Demo Checklist", url: "/admin/demo", icon: ListChecks },
   ];
 
   const managerItems = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard },
     { title: "Sign-off Queue", url: "/signoff-queue", icon: ClipboardCheck },
+    { title: "Demo Checklist", url: "/admin/demo", icon: ListChecks },
   ];
 
   const adminItems = [

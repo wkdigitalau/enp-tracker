@@ -10,6 +10,7 @@ import {
   competencyProgress,
   comments,
   notifications,
+  demoFeedback,
   type User,
   type InsertUser,
   type Facility,
@@ -20,6 +21,7 @@ import {
   type Comment,
   type Notification,
   type ProgramTemplate,
+  type DemoFeedback,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -61,6 +63,11 @@ export interface IStorage {
   getNotificationsByUser(userId: number): Promise<Notification[]>;
   markNotificationRead(id: number): Promise<void>;
   markAllNotificationsRead(userId: number): Promise<void>;
+
+  addDemoFeedback(section: string, authorName: string, text: string): Promise<DemoFeedback>;
+  getDemoFeedbackBySection(section: string): Promise<DemoFeedback[]>;
+  getAllDemoFeedback(): Promise<DemoFeedback[]>;
+  deleteDemoFeedback(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -232,6 +239,23 @@ export class DatabaseStorage implements IStorage {
     await db.update(notifications)
       .set({ readAt: new Date() })
       .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
+  }
+
+  async addDemoFeedback(section: string, authorName: string, text: string): Promise<DemoFeedback> {
+    const [created] = await db.insert(demoFeedback).values({ section, authorName, text }).returning();
+    return created;
+  }
+
+  async getDemoFeedbackBySection(section: string): Promise<DemoFeedback[]> {
+    return db.select().from(demoFeedback).where(eq(demoFeedback.section, section)).orderBy(desc(demoFeedback.createdAt));
+  }
+
+  async getAllDemoFeedback(): Promise<DemoFeedback[]> {
+    return db.select().from(demoFeedback).orderBy(desc(demoFeedback.createdAt));
+  }
+
+  async deleteDemoFeedback(id: number): Promise<void> {
+    await db.delete(demoFeedback).where(eq(demoFeedback.id, id));
   }
 }
 
