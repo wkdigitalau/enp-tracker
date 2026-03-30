@@ -613,6 +613,19 @@ export async function registerRoutes(
     res.json(safeUser);
   });
 
+  app.patch("/api/admin/users/:id/password", requireRole("admin"), async (req: Request, res: Response) => {
+    const userId = parseIntParam(req.params.id);
+    if (userId === null) return res.status(400).json({ message: "Invalid id" });
+    const { password } = req.body;
+    if (!password || typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    await storage.updateUserPassword(userId, hashPassword(password));
+    res.json({ ok: true });
+  });
+
   app.get("/api/admin/managers", requireRole("admin"), async (_req: Request, res: Response) => {
     const managers = await storage.getUsersByRole("manager");
     res.json(managers.map((u) => ({ ...u, passwordHash: undefined })));

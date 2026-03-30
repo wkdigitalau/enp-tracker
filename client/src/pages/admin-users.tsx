@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 
@@ -34,6 +34,8 @@ export default function AdminUsersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<string>("nurse");
+  const [resetUser, setResetUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
@@ -54,6 +56,20 @@ export default function AdminUsersPage() {
     },
     onError: (err: any) => {
       toast({ title: "Failed to create user", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({ id, password }: { id: number; password: string }) => {
+      await apiRequest("PATCH", `/api/admin/users/${id}/password`, { password });
+    },
+    onSuccess: () => {
+      setResetUser(null);
+      setNewPassword("");
+      toast({ title: "Password updated successfully" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to update password", description: err.message, variant: "destructive" });
     },
   });
 
@@ -152,12 +168,46 @@ export default function AdminUsersPage() {
                   <Badge variant="secondary" className={roleBadgeClass(u.role)}>
                     {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
                   </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setResetUser(u); setNewPassword(""); }}
+                    title="Reset password"
+                  >
+                    <KeyRound className="w-4 h-4 text-muted-foreground" />
+                  </Button>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       </div>
+
+      <Dialog open={!!resetUser} onOpenChange={(o) => { if (!o) { setResetUser(null); setNewPassword(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password — {resetUser?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Min 8 characters"
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => resetUser && resetPasswordMutation.mutate({ id: resetUser.id, password: newPassword })}
+              disabled={newPassword.length < 8 || resetPasswordMutation.isPending}
+            >
+              {resetPasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update Password"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </ScrollArea>
   );
 }
