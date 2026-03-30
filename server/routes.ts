@@ -387,6 +387,7 @@ export async function registerRoutes(
     if (progressId === null) return res.status(400).json({ message: "Invalid id" });
     const { text } = req.body;
     if (!text?.trim()) return res.status(400).json({ message: "Comment text required" });
+    if (text.length > 2000) return res.status(400).json({ message: "Comment too long (max 2000 characters)" });
 
     const p = await storage.getProgressById(progressId);
     if (!p) return res.status(404).json({ message: "Not found" });
@@ -713,6 +714,7 @@ export async function registerRoutes(
     if (!section || !text) {
       return res.status(400).json({ error: "section and text are required" });
     }
+    if (text.length > 2000) return res.status(400).json({ error: "Feedback too long (max 2000 characters)" });
     const created = await storage.addDemoFeedback(section, user.role, text);
     res.json(created);
   });
