@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { seedDatabase } from "./seed";
 import { scryptSync, randomBytes, timingSafeEqual } from "crypto";
@@ -18,14 +19,50 @@ function verifyPassword(password: string, stored: string): boolean {
   return timingSafeEqual(hashBuffer, testHash);
 }
 
-const tokenStore = new Map<string, number>();
+const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+interface TokenEntry {
+  userId: number;
+  expiresAt: number;
+}
+
+const tokenStore = new Map<string, TokenEntry>();
+
+// Purge expired tokens every hour
+setInterval(() => {
+  const now = Date.now();
+  Array.from(tokenStore.entries()).forEach(([token, entry]) => {
+    if (entry.expiresAt <= now) tokenStore.delete(token);
+  });
+}, 60 * 60 * 1000);
 
 function getUserIdFromRequest(req: Request): number | null {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) return null;
   const token = authHeader.slice(7);
-  return tokenStore.get(token) ?? null;
+  const entry = tokenStore.get(token);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    tokenStore.delete(token);
+    return null;
+  }
+  return entry.userId;
 }
+
+function parseIntParam(param: string | string[]): number | null {
+  const s = Array.isArray(param) ? param[0] : param;
+  if (!s) return null;
+  const n = parseInt(s, 10);
+  return isNaN(n) ? null : n;
+}
+
+const loginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many login attempts, please try again later" },
+});
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   const userId = getUserIdFromRequest(req);
@@ -55,7 +92,7 @@ export async function registerRoutes(
 ): Promise<Server> {
   await seedDatabase();
 
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
+  app.post("/api/auth/login", loginRateLimiter, async (req: Request, res: Response) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message: "Email and password required" });
 
@@ -65,7 +102,7 @@ export async function registerRoutes(
     }
 
     const token = randomBytes(32).toString("hex");
-    tokenStore.set(token, user.id);
+    tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + TOKEN_TTL_MS });
     const { passwordHash, ...safeUser } = user;
     res.json({ ...safeUser, token });
   });
@@ -93,7 +130,9 @@ export async function registerRoutes(
   });
 
   app.post("/api/notifications/:id/read", requireAuth, async (req: Request, res: Response) => {
-    await storage.markNotificationRead(parseInt(req.params.id));
+    const id = parseIntParam(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid id" });
+    await storage.markNotificationRead(id);
     res.json({ ok: true });
   });
 
@@ -187,8 +226,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/week/:enrollmentId/:competencyId", requireAuth, async (req: Request, res: Response) => {
-    const enrollmentId = parseInt(req.params.enrollmentId);
-    const competencyId = parseInt(req.params.competencyId);
+    const enrollmentId = parseIntParam(req.params.enrollmentId);
+    const competencyId = parseIntParam(req.params.competencyId);
+    if (enrollmentId === null || competencyId === null) return res.status(400).json({ message: "Invalid id" });
 
     const enrollment = await storage.getEnrollmentById(enrollmentId);
     if (!enrollment) return res.status(404).json({ message: "Enrollment not found" });
@@ -260,7 +300,8 @@ export async function registerRoutes(
   });
 
   app.post("/api/progress/:id/ready", requireAuth, async (req: Request, res: Response) => {
-    const progressId = parseInt(req.params.id);
+    const progressId = parseIntParam(req.params.id);
+    if (progressId === null) return res.status(400).json({ message: "Invalid id" });
     const p = await storage.getProgressById(progressId);
     if (!p) return res.status(404).json({ message: "Not found" });
 
@@ -309,7 +350,8 @@ export async function registerRoutes(
   });
 
   app.post("/api/progress/:id/signoff", requireAuth, async (req: Request, res: Response) => {
-    const progressId = parseInt(req.params.id);
+    const progressId = parseIntParam(req.params.id);
+    if (progressId === null) return res.status(400).json({ message: "Invalid id" });
     const p = await storage.getProgressById(progressId);
     if (!p) return res.status(404).json({ message: "Not found" });
 
@@ -341,7 +383,8 @@ export async function registerRoutes(
   });
 
   app.post("/api/progress/:id/comments", requireAuth, async (req: Request, res: Response) => {
-    const progressId = parseInt(req.params.id);
+    const progressId = parseIntParam(req.params.id);
+    if (progressId === null) return res.status(400).json({ message: "Invalid id" });
     const { text } = req.body;
     if (!text?.trim()) return res.status(400).json({ message: "Comment text required" });
 
@@ -468,7 +511,8 @@ export async function registerRoutes(
   });
 
   app.get("/api/enrollment/:id", requireAuth, async (req: Request, res: Response) => {
-    const enrollmentId = parseInt(req.params.id);
+    const enrollmentId = parseIntParam(req.params.id);
+    if (enrollmentId === null) return res.status(400).json({ message: "Invalid id" });
     const enrollment = await storage.getEnrollmentById(enrollmentId);
     if (!enrollment) return res.status(404).json({ message: "Not found" });
 
@@ -674,7 +718,8 @@ export async function registerRoutes(
   });
 
   app.delete("/api/demo-feedback/:id", requireAuth, async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
+    const id = parseIntParam(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid id" });
     await storage.deleteDemoFeedback(id);
     res.json({ ok: true });
   });

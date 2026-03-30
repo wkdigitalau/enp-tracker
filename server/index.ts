@@ -1,9 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+app.use(helmet());
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -66,7 +68,11 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    console.error("Internal Server Error:", err);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Internal Server Error:", err);
+    } else {
+      console.error(`[${new Date().toISOString()}] Server error: ${err?.status || 500}`);
+    }
 
     if (res.headersSent) {
       return next(err);
