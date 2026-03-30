@@ -30,12 +30,12 @@ const rows = [
   {
     icon: Calendar,
     label: "Last updated",
-    value: "[REPLACE: date of last release]",
+    value: __BUILD_DATE__,
   },
   {
     icon: User,
     label: "System administrator",
-    value: "[REPLACE: administrator name and contact email]",
+    value: "support@wkdigital.com.au",
   },
 ];
 
