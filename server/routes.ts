@@ -331,7 +331,7 @@ export async function registerRoutes(
           await storage.createNotification(
             u.id,
             "ready_for_signoff",
-            `${user.name} marked Week ${competency?.weekNumber || "?"} as ready for sign-off`,
+            `Week ${competency?.weekNumber || "?"} marked as ready for sign-off`,
             `/week/${enrollment.id}/${p.competencyId}`
           );
         }
@@ -340,7 +340,7 @@ export async function registerRoutes(
         await storage.createNotification(
           u.id,
           "ready_for_signoff",
-          `${user.name} marked Week ${competency?.weekNumber || "?"} as ready for sign-off`,
+          `Week ${competency?.weekNumber || "?"} marked as ready for sign-off`,
           `/week/${enrollment.id}/${p.competencyId}`
         );
       }
@@ -374,7 +374,7 @@ export async function registerRoutes(
       await storage.createNotification(
         enrollment.nurseUserId,
         "signed_off",
-        `${user.name} signed off Week ${competency?.weekNumber || "?"}: ${competency?.title || ""}`,
+        `Week ${competency?.weekNumber || "?"} signed off: ${competency?.title || ""}`,
         `/week/${enrollment.id}/${p.competencyId}`
       );
     }
@@ -713,7 +713,7 @@ export async function registerRoutes(
     if (!section || !text) {
       return res.status(400).json({ error: "section and text are required" });
     }
-    const created = await storage.addDemoFeedback(section, user.name, text);
+    const created = await storage.addDemoFeedback(section, user.role, text);
     res.json(created);
   });
 

@@ -76,23 +76,6 @@ export default function LoginPage() {
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign in"}
               </Button>
             </form>
-            <div className="mt-6 pt-4 border-t">
-              <p className="text-xs text-muted-foreground text-center mb-3">Demo accounts</p>
-              <div className="space-y-1.5 text-xs text-muted-foreground">
-                <div className="flex items-center justify-between">
-                  <span>Admin: amy@enp.com</span>
-                  <span className="font-mono">admin123</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Manager: candace@enp.com</span>
-                  <span className="font-mono">manager123</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Nurse: sarah@enp.com</span>
-                  <span className="font-mono">nurse123</span>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
