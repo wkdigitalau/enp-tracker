@@ -1,0 +1,113 @@
+# Task: Add In-App Handover & Onboarding Features
+
+## Before you write a single line of code
+
+Audit this codebase and answer the following before proceeding:
+
+1. What is the tech stack? (framework, language, component structure)
+2. What is the main navigation pattern? (sidebar, top nav, tab bar, etc.)
+3. Are there any existing modals, overlays, or toast/notification patterns I can reuse?
+4. Where is state managed? (local component state, context, store, session, etc.)
+5. Is there an existing auth or login flow that fires on first access?
+6. Are there any existing admin or settings pages?
+7. What status indicators, colour badges, or severity labels exist in the app?
+
+List your findings clearly. Then ask me to confirm before proceeding.
+
+---
+
+## Features to build (in this order)
+
+### 1. First-login welcome overlay
+
+Build a modal overlay that appears **once** on first access only. Use whatever storage mechanism is appropriate for this stack (localStorage, session, user record flag, cookie) to track whether the user has seen it.
+
+Requirements:
+- App name as heading
+- Three bullet points maximum (you will need to infer the most important from the codebase — what the app does, who uses it, and how to get help)
+- A single "Got it, let's go" dismiss button
+- Once dismissed, never show again for that browser/user
+- Do not show on every login — first time only
+- Must be accessible on mobile (full-width on small screens, centred card on desktop)
+- Use the app's existing colour and font conventions — do not introduce new styles
+
+---
+
+### 2. Help tab / page (pinned in navigation)
+
+Add a Help section permanently accessible from the main navigation. If there is a sidebar, add it to the bottom. If there is a top nav, add it as a menu item. Do not bury it.
+
+The Help page must contain:
+
+**Quick start** (3–5 numbered steps covering the core workflow — infer from the codebase what the typical user does first, second, third)
+
+**FAQ** (5–7 questions — infer from the codebase what would confuse a first-time user. Cover: how to add/edit/delete the main entity, what the status colours mean, what happens if something goes wrong, and who to contact)
+
+**Support contact card** — a visually distinct block at the bottom with:
+- Label: "Need help?"
+- Email: support@wkdigital.com.au
+- Phone: 1300 796 771
+- Note: "Emailing support@wkdigital.com.au is the fastest way to get your issue reviewed."
+
+No placeholder needed for contact details — use exactly as above.
+
+---
+
+### 3. Inline tooltips on non-obvious fields
+
+Review every form field, input, and data column in the app. For any field where:
+- The label alone does not explain what to enter, or
+- Getting it wrong would cause a problem downstream
+
+Add a small `?` icon or `ⓘ` indicator that shows a tooltip on hover (desktop) and on tap (mobile).
+
+Keep tooltip text to one sentence. Do not add tooltips to fields that are already self-evident (e.g. "Email", "Date of birth").
+
+Use the app's existing tooltip pattern if one exists. If none exists, implement a simple, accessible tooltip using the app's existing styles — no external libraries.
+
+---
+
+### 4. Status colour legend (click to explain)
+
+Find every place in the app where a colour badge, status pill, tag, or severity indicator is used. 
+
+For each distinct status value, ensure:
+- Clicking or tapping the badge opens a small popover or tooltip explaining what that status means
+- The explanation includes what triggered it and what action (if any) the user should take
+
+If the same status badge pattern is used in multiple places, implement the tooltip/popover once as a shared component and reuse it.
+
+---
+
+### 5. Admin section notes
+
+Find the existing settings or admin area (or create a minimal one if none exists). Add a read-only "About this app" section containing:
+
+- App name and version (pull from package.json or equivalent if available, otherwise hardcode)
+- A short description of what the app does (infer from the codebase)
+- Deployment note: "Hosted on Vultr — contact your administrator to update credentials or change configuration"
+- A note about data: "Data is stored in [infer from codebase — e.g. PostgreSQL / SQLite / etc.]. Do not modify records directly in the database without guidance."
+- Placeholder for: Last updated date [REPLACE]
+- Placeholder for: System administrator contact [REPLACE]
+
+This section must be read-only. No editing. No buttons except a close/back navigation.
+
+---
+
+## Style and quality rules
+
+- Match the existing visual design exactly — colours, fonts, border radius, spacing
+- Do not introduce any new dependencies unless absolutely unavoidable
+- All new components must be responsive (mobile-first)
+- All interactive elements must be keyboard accessible
+- All placeholder text must be marked with [REPLACE: ...] so it is easy to find
+- After completing all five features, do a final check: does anything break the existing navigation or layout?
+
+---
+
+## When you are done
+
+Provide a short summary listing:
+1. Where each feature lives in the file structure
+2. Every [REPLACE: ...] placeholder and the file/line it is in
+3. Any assumptions you made that I should verify

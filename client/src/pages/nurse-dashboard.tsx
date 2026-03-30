@@ -1,18 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Circle,
-  ChevronRight,
-  Calendar,
-} from "lucide-react";
+import { StatusBadge, StatusIcon } from "@/components/status-badge";
+import { ChevronRight, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { format, differenceInDays, addDays } from "date-fns";
 
@@ -57,22 +50,6 @@ const phases = [
   { name: "Independence and Reflection", weeks: "45-50" },
 ];
 
-function StatusIcon({ status, isOverdue }: { status: string; isOverdue: boolean }) {
-  if (status === "signed_off") return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
-  if (status === "ready") return <Clock className="w-4 h-4 text-amber-500" />;
-  if (isOverdue) return <AlertTriangle className="w-4 h-4 text-destructive" />;
-  return <Circle className="w-4 h-4 text-muted-foreground/40" />;
-}
-
-function StatusBadge({ status, isOverdue }: { status: string; isOverdue: boolean }) {
-  if (status === "signed_off")
-    return <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 no-default-hover-elevate">Signed Off</Badge>;
-  if (status === "ready")
-    return <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 no-default-hover-elevate">Ready</Badge>;
-  if (isOverdue)
-    return <Badge variant="destructive" className="no-default-hover-elevate">Overdue</Badge>;
-  return <Badge variant="outline" className="no-default-hover-elevate">Not Started</Badge>;
-}
 
 export default function NurseDashboard() {
   const { user } = useAuth();

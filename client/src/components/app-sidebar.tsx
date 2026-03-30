@@ -9,7 +9,8 @@ import {
   Shield,
   ShieldCheck,
   ListChecks,
-  UserCircle,
+  HelpCircle,
+  Info,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,12 +46,14 @@ export function AppSidebar() {
   const nurseItems = [
     { title: "My Dashboard", url: "/", icon: LayoutDashboard },
     { title: "Demo Checklist", url: "/admin/demo", icon: ListChecks },
+    { title: "Help", url: "/help", icon: HelpCircle },
   ];
 
   const managerItems = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard },
     { title: "Sign-off Queue", url: "/signoff-queue", icon: ClipboardCheck },
     { title: "Demo Checklist", url: "/admin/demo", icon: ListChecks },
+    { title: "Help", url: "/help", icon: HelpCircle },
   ];
 
   const adminItems = [
@@ -61,6 +64,8 @@ export function AppSidebar() {
     { title: "Enrollments", url: "/admin/enrollments", icon: ClipboardCheck },
     { title: "Access Control", url: "/admin/rbac", icon: ShieldCheck },
     { title: "Demo Checklist", url: "/admin/demo", icon: ListChecks },
+    { title: "Help", url: "/help", icon: HelpCircle },
+    { title: "About", url: "/admin/about", icon: Info },
   ];
 
   const items =

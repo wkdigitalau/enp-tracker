@@ -22,7 +22,10 @@ import AdminFacilitiesPage from "@/pages/admin-facilities";
 import AdminEnrollmentsPage from "@/pages/admin-enrollments";
 import AdminRBACPage from "@/pages/admin-rbac";
 import AdminDemoChecklist from "@/pages/admin-demo-checklist";
+import AdminAboutPage from "@/pages/admin-about";
+import HelpPage from "@/pages/help";
 import NotFound from "@/pages/not-found";
+import { WelcomeOverlay } from "@/components/welcome-overlay";
 
 function DashboardRouter() {
   const { user } = useAuth();
@@ -45,6 +48,8 @@ function AppRouter() {
       <Route path="/admin/enrollments" component={AdminEnrollmentsPage} />
       <Route path="/admin/rbac" component={AdminRBACPage} />
       <Route path="/admin/demo" component={AdminDemoChecklist} />
+      <Route path="/admin/about" component={AdminAboutPage} />
+      <Route path="/help" component={HelpPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -71,6 +76,7 @@ function AuthenticatedLayout() {
           <main className="flex-1 overflow-hidden">
             <AppRouter />
           </main>
+          <WelcomeOverlay />
         </div>
       </div>
     </SidebarProvider>

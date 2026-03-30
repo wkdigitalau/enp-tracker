@@ -24,7 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2, ChevronRight } from "lucide-react";
+import { Plus, Loader2, ChevronRight, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Link } from "wouter";
@@ -119,7 +120,15 @@ export default function AdminEnrollmentsPage() {
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label>Nurse</Label>
+                  <div className="flex items-center gap-1.5">
+                    <Label>Nurse</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>Only users with the Nurse role appear here.</TooltipContent>
+                    </Tooltip>
+                  </div>
                   <Select value={nurseId} onValueChange={setNurseId}>
                     <SelectTrigger data-testid="select-enroll-nurse">
                       <SelectValue placeholder="Select nurse" />
@@ -134,7 +143,15 @@ export default function AdminEnrollmentsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Facility</Label>
+                  <div className="flex items-center gap-1.5">
+                    <Label>Facility</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>Managers assigned to this facility can sign off this nurse's competencies.</TooltipContent>
+                    </Tooltip>
+                  </div>
                   <Select value={facilityId} onValueChange={setFacilityId}>
                     <SelectTrigger data-testid="select-enroll-facility">
                       <SelectValue placeholder="Select facility" />
@@ -149,7 +166,15 @@ export default function AdminEnrollmentsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Program</Label>
+                  <div className="flex items-center gap-1.5">
+                    <Label>Program</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>Determines the 50 weekly competency tasks and due dates for this nurse.</TooltipContent>
+                    </Tooltip>
+                  </div>
                   <Select value={programId} onValueChange={setProgramId}>
                     <SelectTrigger data-testid="select-enroll-program">
                       <SelectValue placeholder="Select program" />
@@ -164,7 +189,15 @@ export default function AdminEnrollmentsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Start Date</Label>
+                  <div className="flex items-center gap-1.5">
+                    <Label>Start Date</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>The nurse's first day. All 50 weekly due dates are calculated from this date.</TooltipContent>
+                    </Tooltip>
+                  </div>
                   <Input
                     type="date"
                     value={startDate}

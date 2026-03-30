@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -169,21 +170,7 @@ export default function WeekDetailPage() {
                 </div>
               </div>
               <div>
-                {progress.status === "signed_off" ? (
-                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 no-default-hover-elevate">
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Signed Off
-                  </Badge>
-                ) : progress.status === "ready" ? (
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 no-default-hover-elevate">
-                    <Clock className="w-3 h-3 mr-1" /> Ready for Sign-off
-                  </Badge>
-                ) : isOverdue ? (
-                  <Badge variant="destructive" className="no-default-hover-elevate">
-                    <AlertTriangle className="w-3 h-3 mr-1" /> Overdue
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="no-default-hover-elevate">Not Started</Badge>
-                )}
+                <StatusBadge status={progress.status} isOverdue={isOverdue} />
               </div>
             </div>
 
