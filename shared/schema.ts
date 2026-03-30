@@ -83,17 +83,17 @@ export const demoFeedback = pgTable("demo_feedback", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true });
-export const insertFacilitySchema = createInsertSchema(facilities).omit({ id: true });
-export const insertManagerFacilitySchema = createInsertSchema(managerFacilities).omit({ id: true });
-export const insertProgramTemplateSchema = createInsertSchema(programTemplates).omit({ id: true });
-export const insertCompetencySchema = createInsertSchema(competencies).omit({ id: true });
-export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true });
-export const insertCompetencyProgressSchema = createInsertSchema(competencyProgress).omit({ id: true });
-export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
-export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users);
+export const insertFacilitySchema = createInsertSchema(facilities);
+export const insertManagerFacilitySchema = createInsertSchema(managerFacilities);
+export const insertProgramTemplateSchema = createInsertSchema(programTemplates);
+export const insertCompetencySchema = createInsertSchema(competencies);
+export const insertEnrollmentSchema = createInsertSchema(enrollments);
+export const insertCompetencyProgressSchema = createInsertSchema(competencyProgress);
+export const insertCommentSchema = createInsertSchema(comments);
+export const insertNotificationSchema = createInsertSchema(notifications);
 
-export const insertDemoFeedbackSchema = createInsertSchema(demoFeedback).omit({ id: true, createdAt: true });
+export const insertDemoFeedbackSchema = createInsertSchema(demoFeedback);
 
 export const loginSchema = z.object({
   email: z.string().email(),

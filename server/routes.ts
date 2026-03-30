@@ -175,7 +175,7 @@ export async function registerRoutes(
         dueDate: dueDate.toISOString(),
         nurseReadyAt: p?.nurseReadyAt?.toISOString() || null,
         signedOffAt: p?.signedOffAt?.toISOString() || null,
-        signedOffByName,
+        signedOffByName: signedOffByName as string | null,
       };
     }).sort((a, b) => a.weekNumber - b.weekNumber);
 
