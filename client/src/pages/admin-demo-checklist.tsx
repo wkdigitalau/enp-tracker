@@ -33,7 +33,6 @@ type Section = {
   title: string;
   icon: any;
   description: string;
-  loginAs?: string;
   items: CheckItem[];
 };
 
@@ -51,7 +50,6 @@ const sections: Section[] = [
     title: "1. Nurse Experience",
     icon: Users,
     description: "Log in as a nurse to verify their dashboard and workflow.",
-    loginAs: "sarah@enp.com / nurse123",
     items: [
       {
         id: "nurse-login",
@@ -110,7 +108,6 @@ const sections: Section[] = [
     title: "2. Manager Experience",
     icon: ClipboardCheck,
     description: "Log in as a manager to verify oversight and sign-off capabilities.",
-    loginAs: "candace@enp.com / manager123",
     items: [
       {
         id: "mgr-login",
@@ -164,7 +161,6 @@ const sections: Section[] = [
     title: "3. Admin Experience",
     icon: Shield,
     description: "Log in as admin to verify full system control.",
-    loginAs: "amy@enp.com / admin123",
     items: [
       {
         id: "admin-login",
@@ -427,11 +423,8 @@ export default function AdminDemoChecklist() {
       <div className="p-6 space-y-6 max-w-4xl mx-auto">
         <div>
           <h1 className="text-xl font-semibold" data-testid="text-demo-title">
-            Mid-Build Demo Checklist
+            ENP Demo Checklist
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Day 7 milestone review &mdash; test each feature and confirm or flag for discussion
-          </p>
           <div className="flex items-center gap-3 mt-3">
             <Badge variant="secondary" className="no-default-hover-elevate" data-testid="badge-progress">
               {checkedCount} / {totalItems} checked
@@ -457,11 +450,6 @@ export default function AdminDemoChecklist() {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{section.description}</p>
-                {section.loginAs && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Login: <span className="font-mono">{section.loginAs}</span>
-                  </p>
-                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
