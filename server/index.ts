@@ -5,6 +5,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(helmet());
 const httpServer = createServer(app);
 
