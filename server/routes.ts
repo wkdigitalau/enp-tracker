@@ -680,12 +680,12 @@ export async function registerRoutes(
     if (userId === null) return res.status(400).json({ message: "Invalid id" });
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    if (!user.inviteToken) {
-      return res.status(400).json({ message: "This user has already accepted their invitation. Use reset password to update their credentials." });
-    }
+    if (user.archivedAt) return res.status(400).json({ message: "Cannot invite an archived user" });
     const inviteToken = randomBytes(32).toString("hex");
     const inviteExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
     await storage.setInviteToken(user.id, inviteToken, inviteExpiresAt);
+    // Reset password hash so they must set a new one via the invite link
+    await storage.updateUserPassword(user.id, randomBytes(32).toString("hex"));
     await sendInviteEmail(user.name, user.email, inviteToken);
     res.json({ ok: true });
   });
