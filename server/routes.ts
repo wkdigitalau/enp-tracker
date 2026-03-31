@@ -113,6 +113,9 @@ export async function registerRoutes(
 
     const user = await storage.getUserByEmail(email);
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (user.archivedAt) {
+      return res.status(403).json({ message: "This account has been deactivated. Please contact your administrator." });
+    }
     if (user.inviteToken) {
       return res.status(403).json({ message: "Please accept your invitation email before logging in." });
     }
@@ -684,6 +687,26 @@ export async function registerRoutes(
     const inviteExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
     await storage.setInviteToken(user.id, inviteToken, inviteExpiresAt);
     await sendInviteEmail(user.name, user.email, inviteToken);
+    res.json({ ok: true });
+  });
+
+  app.patch("/api/admin/users/:id/archive", requireRole("admin"), async (req: Request, res: Response) => {
+    const userId = parseIntParam(req.params.id);
+    if (userId === null) return res.status(400).json({ message: "Invalid id" });
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.archivedAt) return res.status(400).json({ message: "User is already archived" });
+    await storage.archiveUser(userId);
+    res.json({ ok: true });
+  });
+
+  app.patch("/api/admin/users/:id/unarchive", requireRole("admin"), async (req: Request, res: Response) => {
+    const userId = parseIntParam(req.params.id);
+    if (userId === null) return res.status(400).json({ message: "Invalid id" });
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.archivedAt) return res.status(400).json({ message: "User is not archived" });
+    await storage.unarchiveUser(userId);
     res.json({ ok: true });
   });
 

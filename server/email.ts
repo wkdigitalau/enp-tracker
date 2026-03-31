@@ -101,8 +101,8 @@ export async function sendAllMonthlyEmails(): Promise<{ nurses: number; managers
   const allProgress = await db.select().from(competencyProgress);
   const allMF = await db.select().from(managerFacilities);
 
-  const nurses = allUsers.filter((u) => u.role === "nurse");
-  const managers = allUsers.filter((u) => u.role === "manager");
+  const nurses = allUsers.filter((u) => u.role === "nurse" && !u.archivedAt);
+  const managers = allUsers.filter((u) => u.role === "manager" && !u.archivedAt);
 
   let nurseCount = 0;
   let managerCount = 0;

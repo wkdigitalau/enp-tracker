@@ -33,6 +33,8 @@ export interface IStorage {
   setInviteToken(id: number, token: string, expiresAt: Date): Promise<void>;
   getUserByInviteToken(token: string): Promise<User | undefined>;
   acceptInvite(id: number, passwordHash: string): Promise<void>;
+  archiveUser(id: number): Promise<void>;
+  unarchiveUser(id: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
 
@@ -110,6 +112,14 @@ export class DatabaseStorage implements IStorage {
 
   async acceptInvite(id: number, passwordHash: string): Promise<void> {
     await db.update(users).set({ passwordHash, inviteToken: null, inviteExpiresAt: null }).where(eq(users.id, id));
+  }
+
+  async archiveUser(id: number): Promise<void> {
+    await db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, id));
+  }
+
+  async unarchiveUser(id: number): Promise<void> {
+    await db.update(users).set({ archivedAt: null }).where(eq(users.id, id));
   }
 
   async getAllUsers(): Promise<User[]> {

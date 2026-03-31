@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at"),
   inviteToken: text("invite_token"),
   inviteExpiresAt: timestamp("invite_expires_at"),
+  archivedAt: timestamp("archived_at"),
 });
 
 export const facilities = pgTable("facilities", {

@@ -23,13 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2, KeyRound, Mail } from "lucide-react";
+import { Plus, Loader2, KeyRound, Mail, Archive, ArchiveRestore } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 
 export default function AdminUsersPage() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("nurse");
@@ -66,6 +67,32 @@ export default function AdminUsersPage() {
     },
     onError: (err: any) => {
       toast({ title: "Failed to resend invite", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("PATCH", `/api/admin/users/${id}/archive`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "User archived" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to archive user", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const unarchiveMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("PATCH", `/api/admin/users/${id}/unarchive`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "User reactivated" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to reactivate user", description: err.message, variant: "destructive" });
     },
   });
 
@@ -154,8 +181,17 @@ export default function AdminUsersPage() {
           </Dialog>
         </div>
 
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {showArchived ? "Showing archived users" : `${(users || []).filter(u => !u.archivedAt).length} active users`}
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => setShowArchived(!showArchived)} className="text-muted-foreground">
+            {showArchived ? <><ArchiveRestore className="w-4 h-4 mr-1.5" />Show Active</> : <><Archive className="w-4 h-4 mr-1.5" />View Archived</>}
+          </Button>
+        </div>
+
         <div className="space-y-2">
-          {(users || []).map((u) => {
+          {(users || []).filter(u => showArchived ? !!u.archivedAt : !u.archivedAt).map((u) => {
             const initials = u.name
               .split(" ")
               .map((n) => n[0])
@@ -163,7 +199,7 @@ export default function AdminUsersPage() {
               .toUpperCase()
               .slice(0, 2);
             return (
-              <Card key={u.id} data-testid={`card-user-${u.id}`}>
+              <Card key={u.id} data-testid={`card-user-${u.id}`} className={u.archivedAt ? "opacity-60" : ""}>
                 <CardContent className="p-4 flex items-center gap-4">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary/10 text-sm">{initials}</AvatarFallback>
@@ -175,27 +211,55 @@ export default function AdminUsersPage() {
                   <Badge variant="secondary" className={roleBadgeClass(u.role)}>
                     {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
                   </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => resendInviteMutation.mutate(u.id)}
-                    title="Resend invitation email"
-                    disabled={resendInviteMutation.isPending}
-                  >
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => { setResetUser(u); setNewPassword(""); }}
-                    title="Reset password"
-                  >
-                    <KeyRound className="w-4 h-4 text-muted-foreground" />
-                  </Button>
+                  {u.archivedAt ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => unarchiveMutation.mutate(u.id)}
+                      title="Reactivate user"
+                      disabled={unarchiveMutation.isPending}
+                    >
+                      <ArchiveRestore className="w-4 h-4 text-muted-foreground" />
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => resendInviteMutation.mutate(u.id)}
+                        title="Resend invitation email"
+                        disabled={resendInviteMutation.isPending}
+                      >
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setResetUser(u); setNewPassword(""); }}
+                        title="Reset password"
+                      >
+                        <KeyRound className="w-4 h-4 text-muted-foreground" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => archiveMutation.mutate(u.id)}
+                        title="Archive user"
+                        disabled={archiveMutation.isPending}
+                      >
+                        <Archive className="w-4 h-4 text-muted-foreground" />
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
+          {(users || []).filter(u => showArchived ? !!u.archivedAt : !u.archivedAt).length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {showArchived ? "No archived users." : "No active users."}
+            </p>
+          )}
         </div>
       </div>
 
