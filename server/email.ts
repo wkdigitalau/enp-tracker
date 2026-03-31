@@ -11,6 +11,10 @@ import {
 
 const APP_URL = "https://enp.digitalp.com.au";
 
+function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function getSendGrid() {
   const apiKey = process.env.SENDGRID_API_KEY;
   const from = process.env.SENDGRID_FROM || "noreply@digitalp.com.au";
@@ -67,11 +71,11 @@ export async function sendInviteEmail(
   const inviteUrl = `${APP_URL}/accept-invite?token=${token}`;
 
   const body = `
-    <p style="font-size:16px;font-weight:bold;color:#1a1a2e;margin:0 0 8px;">Welcome, ${userName}</p>
+    <p style="font-size:16px;font-weight:bold;color:#1a1a2e;margin:0 0 8px;">Welcome, ${esc(userName)}</p>
     <p style="font-size:14px;color:#444444;margin:0 0 24px;">
       You've been added to the ENP Training Platform. Click the button below to set your password and get started.
     </p>
-    <a href="${inviteUrl}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:bold;">Accept Invitation</a>
+    <a href="${esc(inviteUrl)}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:bold;">Accept Invitation</a>
     <p style="font-size:12px;color:#999999;margin:24px 0 0;">This link expires in 72 hours. If you weren't expecting this email, you can ignore it.</p>
   `;
 
@@ -135,15 +139,15 @@ export async function sendAllMonthlyEmails(): Promise<{ nurses: number; managers
       : "You haven't logged in yet.";
 
     const overdueRows = overdue.length > 0
-      ? overdue.map((c) => `<tr><td style="padding:6px 0;font-size:13px;color:#1a1a2e;">Week ${c.weekNumber}</td><td style="padding:6px 8px;font-size:13px;color:#444444;">${c.title}</td><td style="padding:6px 0;font-size:13px;color:#dc2626;white-space:nowrap;">Due ${formatDate(c.dueDate)}</td></tr>`).join("")
+      ? overdue.map((c) => `<tr><td style="padding:6px 0;font-size:13px;color:#1a1a2e;">Week ${c.weekNumber}</td><td style="padding:6px 8px;font-size:13px;color:#444444;">${esc(c.title)}</td><td style="padding:6px 0;font-size:13px;color:#dc2626;white-space:nowrap;">Due ${formatDate(c.dueDate)}</td></tr>`).join("")
       : `<tr><td colspan="3" style="padding:6px 0;font-size:13px;color:#16a34a;">No overdue items — great work!</td></tr>`;
 
     const upcomingRows = upcoming.length > 0
-      ? upcoming.map((c) => `<tr><td style="padding:6px 0;font-size:13px;color:#1a1a2e;">Week ${c.weekNumber}</td><td style="padding:6px 8px;font-size:13px;color:#444444;">${c.title}</td><td style="padding:6px 0;font-size:13px;color:#2563eb;white-space:nowrap;">Due ${formatDate(c.dueDate)}</td></tr>`).join("")
+      ? upcoming.map((c) => `<tr><td style="padding:6px 0;font-size:13px;color:#1a1a2e;">Week ${c.weekNumber}</td><td style="padding:6px 8px;font-size:13px;color:#444444;">${esc(c.title)}</td><td style="padding:6px 0;font-size:13px;color:#2563eb;white-space:nowrap;">Due ${formatDate(c.dueDate)}</td></tr>`).join("")
       : `<tr><td colspan="3" style="padding:6px 0;font-size:13px;color:#999999;">Nothing due in the next 4 weeks.</td></tr>`;
 
     const body = `
-      <p style="font-size:16px;font-weight:bold;color:#1a1a2e;margin:0 0 4px;">Hi ${nurse.name},</p>
+      <p style="font-size:16px;font-weight:bold;color:#1a1a2e;margin:0 0 4px;">Hi ${esc(nurse.name)},</p>
       <p style="font-size:14px;color:#444444;margin:0 0 24px;">Here's your monthly training update.</p>
 
       <p style="font-size:12px;color:#999999;margin:0 0 4px;text-transform:uppercase;letter-spacing:.5px;">Activity</p>
@@ -211,15 +215,15 @@ export async function sendAllMonthlyEmails(): Promise<{ nurses: number; managers
       overdueSection = `<p style="font-size:13px;color:#16a34a;margin:0 0 24px;">No overdue items across your facilities.</p>`;
     } else {
       overdueSection = overdueByNurse.map((row) => `
-        <p style="font-size:13px;font-weight:bold;color:#1a1a2e;margin:0 0 4px;">${row.nurseName}</p>
+        <p style="font-size:13px;font-weight:bold;color:#1a1a2e;margin:0 0 4px;">${esc(row.nurseName)}</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
-          ${row.items.map((c) => `<tr><td style="padding:4px 0;font-size:12px;color:#1a1a2e;width:60px;">Week ${c.weekNumber}</td><td style="padding:4px 8px;font-size:12px;color:#444444;">${c.title}</td><td style="padding:4px 0;font-size:12px;color:#dc2626;white-space:nowrap;">Due ${formatDate(c.dueDate)}</td></tr>`).join("")}
+          ${row.items.map((c) => `<tr><td style="padding:4px 0;font-size:12px;color:#1a1a2e;width:60px;">Week ${c.weekNumber}</td><td style="padding:4px 8px;font-size:12px;color:#444444;">${esc(c.title)}</td><td style="padding:4px 0;font-size:12px;color:#dc2626;white-space:nowrap;">Due ${formatDate(c.dueDate)}</td></tr>`).join("")}
         </table>
       `).join("");
     }
 
     const body = `
-      <p style="font-size:16px;font-weight:bold;color:#1a1a2e;margin:0 0 4px;">Hi ${manager.name},</p>
+      <p style="font-size:16px;font-weight:bold;color:#1a1a2e;margin:0 0 4px;">Hi ${esc(manager.name)},</p>
       <p style="font-size:14px;color:#444444;margin:0 0 24px;">Here's your monthly team overview.</p>
 
       <p style="font-size:12px;color:#999999;margin:0 0 4px;text-transform:uppercase;letter-spacing:.5px;">Activity</p>

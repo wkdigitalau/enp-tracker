@@ -63,6 +63,14 @@ function parseIntParam(param: string | string[]): number | null {
   return isNaN(n) ? null : n;
 }
 
+const acceptInviteRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts, please try again later" },
+});
+
 const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -104,11 +112,12 @@ export async function registerRoutes(
     if (!email || !password) return res.status(400).json({ message: "Email and password required" });
 
     const user = await storage.getUserByEmail(email);
-    if (!user || !verifyPassword(password, user.passwordHash)) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
     if (user.inviteToken) {
       return res.status(403).json({ message: "Please accept your invitation email before logging in." });
+    }
+    if (!verifyPassword(password, user.passwordHash)) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     await storage.updateLastLogin(user.id);
@@ -137,7 +146,7 @@ export async function registerRoutes(
   });
 
   // Accept invite + set password (POST) — returns auth token on success
-  app.post("/api/auth/accept-invite", async (req: Request, res: Response) => {
+  app.post("/api/auth/accept-invite", acceptInviteRateLimiter, async (req: Request, res: Response) => {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ message: "Token and password required" });
     if (password.length < 8) return res.status(400).json({ message: "Password must be at least 8 characters" });
@@ -668,7 +677,9 @@ export async function registerRoutes(
     if (userId === null) return res.status(400).json({ message: "Invalid id" });
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-
+    if (!user.inviteToken) {
+      return res.status(400).json({ message: "This user has already accepted their invitation. Use reset password to update their credentials." });
+    }
     const inviteToken = randomBytes(32).toString("hex");
     const inviteExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
     await storage.setInviteToken(user.id, inviteToken, inviteExpiresAt);
