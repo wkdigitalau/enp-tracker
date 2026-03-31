@@ -12,6 +12,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: roleEnum("role").notNull().default("nurse"),
+  lastLoginAt: timestamp("last_login_at"),
+  inviteToken: text("invite_token"),
+  inviteExpiresAt: timestamp("invite_expires_at"),
 });
 
 export const facilities = pgTable("facilities", {

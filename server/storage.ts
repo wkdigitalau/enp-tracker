@@ -29,6 +29,10 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserPassword(id: number, passwordHash: string): Promise<void>;
+  updateLastLogin(id: number): Promise<void>;
+  setInviteToken(id: number, token: string, expiresAt: Date): Promise<void>;
+  getUserByInviteToken(token: string): Promise<User | undefined>;
+  acceptInvite(id: number, passwordHash: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
 
@@ -89,6 +93,23 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPassword(id: number, passwordHash: string): Promise<void> {
     await db.update(users).set({ passwordHash }).where(eq(users.id, id));
+  }
+
+  async updateLastLogin(id: number): Promise<void> {
+    await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, id));
+  }
+
+  async setInviteToken(id: number, token: string, expiresAt: Date): Promise<void> {
+    await db.update(users).set({ inviteToken: token, inviteExpiresAt: expiresAt }).where(eq(users.id, id));
+  }
+
+  async getUserByInviteToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.inviteToken, token));
+    return user;
+  }
+
+  async acceptInvite(id: number, passwordHash: string): Promise<void> {
+    await db.update(users).set({ passwordHash, inviteToken: null, inviteExpiresAt: null }).where(eq(users.id, id));
   }
 
   async getAllUsers(): Promise<User[]> {

@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2, KeyRound } from "lucide-react";
+import { Plus, Loader2, KeyRound, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 
@@ -32,7 +32,6 @@ export default function AdminUsersPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [role, setRole] = useState<string>("nurse");
   const [resetUser, setResetUser] = useState<User | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -43,19 +42,30 @@ export default function AdminUsersPage() {
 
   const createUserMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/admin/users", { name, email, password, role });
+      await apiRequest("POST", "/api/admin/users", { name, email, role });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setOpen(false);
       setName("");
       setEmail("");
-      setPassword("");
       setRole("nurse");
-      toast({ title: "User created successfully" });
+      toast({ title: "User created — invitation email sent" });
     },
     onError: (err: any) => {
       toast({ title: "Failed to create user", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const resendInviteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("POST", `/api/admin/users/${id}/resend-invite`);
+    },
+    onSuccess: () => {
+      toast({ title: "Invitation email resent" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to resend invite", description: err.message, variant: "destructive" });
     },
   });
 
@@ -118,10 +128,6 @@ export default function AdminUsersPage() {
                   <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@enp.com" data-testid="input-user-email" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Password</Label>
-                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Set a password" data-testid="input-user-password" />
-                </div>
-                <div className="space-y-2">
                   <Label>Role</Label>
                   <Select value={role} onValueChange={setRole}>
                     <SelectTrigger data-testid="select-user-role">
@@ -134,10 +140,11 @@ export default function AdminUsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <p className="text-xs text-muted-foreground">An invitation email will be sent so the user can set their own password.</p>
                 <Button
                   className="w-full"
                   onClick={() => createUserMutation.mutate()}
-                  disabled={!name || !email || !password || createUserMutation.isPending}
+                  disabled={!name || !email || createUserMutation.isPending}
                   data-testid="button-create-user"
                 >
                   {createUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create User"}
@@ -168,6 +175,15 @@ export default function AdminUsersPage() {
                   <Badge variant="secondary" className={roleBadgeClass(u.role)}>
                     {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
                   </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => resendInviteMutation.mutate(u.id)}
+                    title="Resend invitation email"
+                    disabled={resendInviteMutation.isPending}
+                  >
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

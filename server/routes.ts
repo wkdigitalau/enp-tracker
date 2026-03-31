@@ -3,7 +3,9 @@ import { type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { seedDatabase } from "./seed";
+import { sendInviteEmail, sendAllMonthlyEmails } from "./email";
 import { scryptSync, randomBytes, timingSafeEqual } from "crypto";
+import type { User } from "@shared/schema";
 import { addDays, differenceInDays } from "date-fns";
 
 function hashPassword(password: string): string {
@@ -47,6 +49,11 @@ function getUserIdFromRequest(req: Request): number | null {
     return null;
   }
   return entry.userId;
+}
+
+function sanitizeUser(user: User) {
+  const { passwordHash, inviteToken, inviteExpiresAt, ...safe } = user;
+  return safe;
 }
 
 function parseIntParam(param: string | string[]): number | null {
@@ -100,11 +107,14 @@ export async function registerRoutes(
     if (!user || !verifyPassword(password, user.passwordHash)) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+    if (user.inviteToken) {
+      return res.status(403).json({ message: "Please accept your invitation email before logging in." });
+    }
 
+    await storage.updateLastLogin(user.id);
     const token = randomBytes(32).toString("hex");
     tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + TOKEN_TTL_MS });
-    const { passwordHash, ...safeUser } = user;
-    res.json({ ...safeUser, token });
+    res.json({ ...sanitizeUser(user), token });
   });
 
   app.post("/api/auth/logout", (req: Request, res: Response) => {
@@ -115,13 +125,40 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // Validate invite token (GET) — returns user name so the UI can greet them
+  app.get("/api/auth/accept-invite", async (req: Request, res: Response) => {
+    const { token } = req.query;
+    if (!token || typeof token !== "string") return res.status(400).json({ message: "Invalid token" });
+    const user = await storage.getUserByInviteToken(token);
+    if (!user || !user.inviteExpiresAt || user.inviteExpiresAt < new Date()) {
+      return res.status(400).json({ message: "This invitation link has expired or is invalid. Please ask your administrator to resend the invite." });
+    }
+    res.json({ name: user.name });
+  });
+
+  // Accept invite + set password (POST) — returns auth token on success
+  app.post("/api/auth/accept-invite", async (req: Request, res: Response) => {
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ message: "Token and password required" });
+    if (password.length < 8) return res.status(400).json({ message: "Password must be at least 8 characters" });
+    const user = await storage.getUserByInviteToken(token);
+    if (!user || !user.inviteExpiresAt || user.inviteExpiresAt < new Date()) {
+      return res.status(400).json({ message: "This invitation link has expired or is invalid." });
+    }
+    await storage.acceptInvite(user.id, hashPassword(password));
+    await storage.updateLastLogin(user.id);
+    const authToken = randomBytes(32).toString("hex");
+    tokenStore.set(authToken, { userId: user.id, expiresAt: Date.now() + TOKEN_TTL_MS });
+    const updated = await storage.getUser(user.id);
+    res.json({ ...sanitizeUser(updated!), token: authToken });
+  });
+
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     const userId = getUserIdFromRequest(req);
     if (!userId) return res.status(401).json({ message: "Not authenticated" });
     const user = await storage.getUser(userId);
     if (!user) return res.status(401).json({ message: "User not found" });
-    const { passwordHash, ...safeUser } = user;
-    res.json(safeUser);
+    res.json(sanitizeUser(user));
   });
 
   app.get("/api/notifications", requireAuth, async (req: Request, res: Response) => {
@@ -592,25 +629,51 @@ export async function registerRoutes(
 
   app.get("/api/admin/users", requireRole("admin"), async (_req: Request, res: Response) => {
     const allUsers = await storage.getAllUsers();
-    res.json(allUsers.map((u) => ({ ...u, passwordHash: undefined })));
+    res.json(allUsers.map(sanitizeUser));
   });
 
   app.post("/api/admin/users", requireRole("admin"), async (req: Request, res: Response) => {
-    const { name, email, password, role } = req.body;
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "All fields required" });
+    const { name, email, role } = req.body;
+    if (!name || !email || !role) {
+      return res.status(400).json({ message: "Name, email and role are required" });
     }
     const existing = await storage.getUserByEmail(email);
     if (existing) return res.status(400).json({ message: "Email already exists" });
 
+    // Create user with a random unusable password hash — real password set via invite
     const user = await storage.createUser({
       name,
       email,
-      passwordHash: hashPassword(password),
+      passwordHash: randomBytes(32).toString("hex"),
       role,
     });
-    const { passwordHash, ...safeUser } = user;
-    res.json(safeUser);
+
+    // Generate 72-hour invite token and send email
+    const inviteToken = randomBytes(32).toString("hex");
+    const inviteExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    await storage.setInviteToken(user.id, inviteToken, inviteExpiresAt);
+
+    try {
+      await sendInviteEmail(user.name, user.email, inviteToken);
+    } catch (err) {
+      // Log but don't fail — admin can resend
+      console.error("Failed to send invite email:", err instanceof Error ? err.message : String(err));
+    }
+
+    res.json(sanitizeUser(user));
+  });
+
+  app.post("/api/admin/users/:id/resend-invite", requireRole("admin"), async (req: Request, res: Response) => {
+    const userId = parseIntParam(req.params.id);
+    if (userId === null) return res.status(400).json({ message: "Invalid id" });
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const inviteToken = randomBytes(32).toString("hex");
+    const inviteExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    await storage.setInviteToken(user.id, inviteToken, inviteExpiresAt);
+    await sendInviteEmail(user.name, user.email, inviteToken);
+    res.json({ ok: true });
   });
 
   app.patch("/api/admin/users/:id/password", requireRole("admin"), async (req: Request, res: Response) => {
@@ -628,12 +691,22 @@ export async function registerRoutes(
 
   app.get("/api/admin/managers", requireRole("admin"), async (_req: Request, res: Response) => {
     const managers = await storage.getUsersByRole("manager");
-    res.json(managers.map((u) => ({ ...u, passwordHash: undefined })));
+    res.json(managers.map(sanitizeUser));
   });
 
   app.get("/api/admin/nurses", requireRole("admin"), async (_req: Request, res: Response) => {
     const nurses = await storage.getUsersByRole("nurse");
-    res.json(nurses.map((u) => ({ ...u, passwordHash: undefined })));
+    res.json(nurses.map(sanitizeUser));
+  });
+
+  // Manual trigger for monthly emails (admin only, for testing)
+  app.post("/api/admin/email/send-monthly", requireRole("admin"), async (_req: Request, res: Response) => {
+    try {
+      const result = await sendAllMonthlyEmails();
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      res.status(500).json({ message: err instanceof Error ? err.message : "Failed to send emails" });
+    }
   });
 
   app.get("/api/admin/facilities", requireRole("admin"), async (_req: Request, res: Response) => {

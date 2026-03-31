@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import LoginPage from "@/pages/login";
+import AcceptInvitePage from "@/pages/accept-invite";
 import NurseDashboard from "@/pages/nurse-dashboard";
 import ManagerDashboard from "@/pages/manager-dashboard";
 import WeekDetailPage from "@/pages/week-detail";
@@ -85,6 +86,8 @@ function AuthenticatedLayout() {
 
 function AppContent() {
   const { user, isLoading } = useAuth();
+
+  if (window.location.pathname.startsWith("/accept-invite")) return <AcceptInvitePage />;
 
   if (isLoading) {
     return (
