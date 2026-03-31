@@ -112,7 +112,7 @@ export async function seedDatabase() {
   await storage.assignManagerToFacility(manager.id, facility1.id);
   await storage.assignManagerToFacility(manager.id, facility2.id);
 
-  const program = await storage.createProgramTemplate("Mayfield New Grad RN Competency Program 2025");
+  const program = await storage.createProgramTemplate("Transition to Practice 2026");
 
   const competencyRecords: { id: number; weekNumber: number }[] = [];
   for (const c of COMPETENCIES) {
