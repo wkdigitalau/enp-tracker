@@ -1,7 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Info, Database, Server, Calendar, User } from "lucide-react";
+import { Info, Calendar, Wrench } from "lucide-react";
 
 const rows = [
   {
@@ -16,26 +16,14 @@ const rows = [
       "A 50-week nurse orientation and competency tracking platform for Elite Nurse Partners. Managers and admins track nurses through a structured program of clinical sign-offs across aged care facilities.",
   },
   {
-    icon: Server,
-    label: "Hosting",
-    value:
-      "Hosted on Vultr — contact your administrator to update credentials or change server configuration.",
-  },
-  {
-    icon: Database,
-    label: "Data storage",
-    value:
-      "Data is stored in PostgreSQL. Do not modify records directly in the database without guidance from your administrator.",
-  },
-  {
     icon: Calendar,
     label: "Last updated",
     value: __BUILD_DATE__,
   },
   {
-    icon: User,
-    label: "System administrator",
-    value: "support@wkdigital.com.au",
+    icon: Wrench,
+    label: "Software development, Hosting and Support",
+    lines: ["WK Digital", "support@wkdigital.com.au"],
   },
 ];
 
@@ -50,7 +38,7 @@ export default function AdminAboutPage() {
 
         <Card>
           <CardContent className="p-0">
-            {rows.map(({ icon: Icon, label, value }, i) => (
+            {rows.map(({ icon: Icon, label, value, lines }, i) => (
               <div key={label}>
                 {i > 0 && <Separator />}
                 <div className="flex items-start gap-4 p-4">
@@ -59,7 +47,11 @@ export default function AdminAboutPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
-                    <p className="text-sm">{value}</p>
+                    {lines ? (
+                      lines.map((line) => <p key={line} className="text-sm">{line}</p>)
+                    ) : (
+                      <p className="text-sm">{value}</p>
+                    )}
                   </div>
                 </div>
               </div>
