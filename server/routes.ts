@@ -68,6 +68,7 @@ const acceptInviteRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   message: { message: "Too many attempts, please try again later" },
 });
 
@@ -76,6 +77,7 @@ const loginRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   message: { message: "Too many login attempts, please try again later" },
 });
 
