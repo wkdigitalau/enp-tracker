@@ -26,6 +26,7 @@ import AdminDemoChecklist from "@/pages/admin-demo-checklist";
 import AdminAboutPage from "@/pages/admin-about";
 import HelpPage from "@/pages/help";
 import NotFound from "@/pages/not-found";
+import FacilitatorReadinessReview from "@/pages/facilitator-readiness-review";
 import { WelcomeOverlay } from "@/components/welcome-overlay";
 
 function DashboardRouter() {
@@ -88,6 +89,7 @@ function AppContent() {
   const { user, isLoading } = useAuth();
 
   if (window.location.pathname.startsWith("/accept-invite")) return <AcceptInvitePage />;
+  if (window.location.pathname.startsWith("/facilitator-readiness-review")) return <FacilitatorReadinessReview />;
 
   if (isLoading) {
     return (
