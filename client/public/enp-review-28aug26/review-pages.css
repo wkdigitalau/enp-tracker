@@ -43,7 +43,7 @@
   font-family: Manrope, Arial, sans-serif;
   font-weight: 400;
 }
-.review-pages h1 { letter-spacing: -.04em; }
+.review-pages h1 { max-width: 760px; font-size: clamp(2.35rem, 4.4vw, 4rem); letter-spacing: -.04em; }
 .review-pages h2 { letter-spacing: -.03em; }
 .review-pages .site-header { background: var(--ink); border-bottom: 0; }
 .review-pages .brand { color: #fff; }
@@ -115,6 +115,8 @@
 .founder-layout h2 { max-width: 500px; }
 .founder-layout p { margin: 0; color: var(--ink-soft); font-size: 1.06rem; }
 .founder-layout p + p { margin-top: 15px; }
+.founder-people-row { display: grid; grid-template-columns: minmax(170px, .35fr) minmax(0, 1fr); gap: 36px; align-items: center; margin-top: 34px; padding-top: 28px; border-top: 1px solid var(--line); }
+.founder-people-row .founder-profiles { margin-top: 0; }
 .founder-quote {
   position: relative;
   padding: 22px 26px 22px 30px;
@@ -278,7 +280,7 @@
   color: var(--ink-soft);
   font-size: .78rem;
 }
-.data-gap-list { display: grid; gap: 10px; margin-top: 16px; }
+.data-gap-list { display: none; }
 .data-gap {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr);
@@ -304,6 +306,7 @@
 .data-gap strong { display: block; color: var(--ink); }
 .data-gap.confirmed-gap { border: 1px solid rgba(208,190,148,.75); border-left: 4px solid var(--gold); background: var(--gold-soft); }
 .data-gap.confirmed-gap::before { content: "✓"; background: var(--ink); }
+.town-note { display: block; margin-top: 14px; color: var(--ink-soft); font-size: .86rem; }
 .landing-hero .hero-grid { padding-top: 82px; padding-bottom: 86px; }
 .landing-hero h1 { max-width: 700px; }
 .landing-hero .hero-card { padding: 24px; }
@@ -343,7 +346,7 @@
 @media (max-width: 860px) {
   .review-bar .shell { display: block; }
   .review-bar .review-label { display: block; margin-bottom: 6px; }
-  .personal-layout, .review-grid, .founder-layout { grid-template-columns: 1fr; }
+  .personal-layout, .review-grid, .founder-layout, .founder-people-row { grid-template-columns: 1fr; }
   .review-pages .visit-strip .shell { display: block; }
   .review-pages .visit-strip .button { margin-top: 16px; }
   .page-role .shell { grid-template-columns: 1fr; gap: 5px; }
