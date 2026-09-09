@@ -218,6 +218,14 @@
 }
 .people-card strong { display: block; color: var(--gold); font-family: Georgia, serif; font-size: 1.65rem; }
 .people-card p { margin-top: 8px; font-size: .92rem; }
+.founder-profiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+.founder-profile { overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.founder-profile img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
+.founder-profile-copy { padding: 12px 13px 14px; }
+.founder-profile-copy strong { display: block; color: var(--ink); font-size: .95rem; }
+.founder-profile-copy span { display: block; margin-top: 4px; color: var(--ink-soft); font-size: .76rem; line-height: 1.35; }
+.profile-link { display: inline-block; margin-top: 8px; color: var(--ink); font-size: .75rem; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
+.profile-link.pending { color: var(--review-dark); }
 .sequence {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -294,6 +302,8 @@
   font-weight: 900;
 }
 .data-gap strong { display: block; color: var(--ink); }
+.data-gap.confirmed-gap { border: 1px solid rgba(208,190,148,.75); border-left: 4px solid var(--gold); background: var(--gold-soft); }
+.data-gap.confirmed-gap::before { content: "✓"; background: var(--ink); }
 .landing-hero .hero-grid { padding-top: 82px; padding-bottom: 86px; }
 .landing-hero h1 { max-width: 700px; }
 .landing-hero .hero-card { padding: 24px; }
@@ -345,6 +355,7 @@
   .brand-full-name { max-width: none; }
 }
 @media (max-width: 540px) {
+  .founder-profiles { grid-template-columns: 1fr; }
   .sequence { grid-template-columns: 1fr; }
   .sequence-item::after, .sequence-item:nth-child(3)::after { display: none; }
   .request-choice { grid-template-columns: 1fr; }
