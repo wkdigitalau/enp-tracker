@@ -38,3 +38,15 @@ jobs:
             npx drizzle-kit push
             supervisorctl restart enp
             supervisorctl status enp
+
+            # Install the separate public ENP site without altering the tracker vhost.
+            if ! command -v nginx >/dev/null 2>&1; then
+              apt-get update -y
+              apt-get install -y nginx
+            fi
+            install -m 644 deploy/enp-public.nginx.bootstrap.conf /etc/nginx/sites-available/enp-public
+            ln -sfn /etc/nginx/sites-available/enp-public /etc/nginx/sites-enabled/enp-public
+            nginx -t
+            systemctl reload nginx
+            # The final HTTPS vhost is installed after the domain has been routed
+            # and the Let's Encrypt certificate has been obtained.
