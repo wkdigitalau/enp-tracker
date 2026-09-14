@@ -51,8 +51,10 @@
 .review-pages .brand-mark { display: none; }
 .brand-logo {
   display: block;
-  width: 142px;
+  flex: 0 0 auto;
+  width: 116px;
   height: auto;
+  object-fit: contain;
 }
 .brand-full-name {
   display: block;
