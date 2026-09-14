@@ -43,7 +43,7 @@
   font-family: Manrope, Arial, sans-serif;
   font-weight: 400;
 }
-.review-pages h1 { max-width: 760px; font-size: clamp(2.35rem, 4.4vw, 4rem); letter-spacing: -.04em; }
+.review-pages h1 { max-width: 760px; font-size: clamp(2.2rem, 3.4vw, 3.35rem); letter-spacing: -.04em; }
 .review-pages h2 { letter-spacing: -.03em; }
 .review-pages .site-header { background: var(--ink); border-bottom: 0; }
 .review-pages .brand { color: #fff; }
@@ -366,6 +366,7 @@
   .bottom-review .shell { display: block; }
   .bottom-review .button { margin-top: 18px; }
   .brand-full-name { max-width: none; }
+  .review-pages h1 { font-size: 2.45rem; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 540px) {
