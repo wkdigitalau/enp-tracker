@@ -48,5 +48,22 @@ jobs:
             ln -sfn /etc/nginx/sites-available/enp-public /etc/nginx/sites-enabled/enp-public
             nginx -t
             systemctl reload nginx
-            # The final HTTPS vhost is installed after the domain has been routed
-            # and the Let's Encrypt certificate has been obtained.
+
+            # Obtain/renew the public certificate after DNS routing is live.
+            if ! command -v certbot >/dev/null 2>&1; then
+              apt-get update -y
+              apt-get install -y certbot
+            fi
+            certbot certonly --webroot \
+              -w /opt/enp/dist/public/enp-review-28aug26 \
+              -d elitenursepartners.com.au \
+              -d www.elitenursepartners.com.au \
+              --non-interactive \
+              --agree-tos \
+              --register-unsafely-without-email \
+              --keep-until-expiring
+
+            # Switch the public site to the final HTTPS vhost.
+            install -m 644 deploy/enp-public.nginx.conf /etc/nginx/sites-available/enp-public
+            nginx -t
+            systemctl reload nginx
