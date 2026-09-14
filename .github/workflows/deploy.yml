@@ -67,9 +67,3 @@ jobs:
             install -m 644 deploy/enp-public.nginx.conf /etc/nginx/sites-available/enp-public
             nginx -t
             systemctl reload nginx
-
-            # Verify the public origin and edge response from the server.
-            echo "=== ENP HTTPS CHECK ==="
-            curl -sS -I --max-time 30 --max-redirs 5 https://elitenursepartners.com.au/ || true
-            echo "=== ENP HTTP CHECK ==="
-            curl -sS -I --max-time 30 --max-redirs 5 http://elitenursepartners.com.au/ || true
