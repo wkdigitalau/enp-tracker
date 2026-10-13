@@ -18,7 +18,7 @@ The ENP_RECIPIENT_ACTIVITY_ENABLED setting is deliberately false in the HTML. Th
 2. ENP approves and publishes plain-language privacy wording describing recipient-specific link and on-site activity association, purpose, access and retention.
 3. A controlled internal end-to-end check confirms the recipient token is absent from GA4 and only expected events appear in the Connect lead timeline.
 
-The email link's initial request is still visible to the ENP web server as an opaque query token before the browser removes it. Do not describe the token as absent from all server logs; confirm the server/CDN log policy and retention as part of the release review. The token and campaign identity are never sent to Google Analytics by this helper.
+The public ENP Nginx access-log format added with this feature records the request path but not query arguments, preventing the opaque referral token from being written to those access logs. Cloudflare still processes the request URL; check the account's applicable logging/retention settings before activation. The browser removes the token before GA4 loads, and the token is never sent to Google Analytics by this helper.
 
 ## Events
 
