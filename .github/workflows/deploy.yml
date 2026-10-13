@@ -44,6 +44,7 @@ jobs:
               apt-get update -y
               apt-get install -y nginx
             fi
+            install -m 644 deploy/enp-public-log-format.conf /etc/nginx/conf.d/enp-public-log-format.conf
             install -m 644 deploy/enp-public.nginx.bootstrap.conf /etc/nginx/sites-available/enp-public
             ln -sfn /etc/nginx/sites-available/enp-public /etc/nginx/sites-enabled/enp-public
             nginx -t
