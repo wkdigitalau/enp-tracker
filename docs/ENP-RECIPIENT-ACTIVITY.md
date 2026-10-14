@@ -4,7 +4,7 @@ This is the static-site half of the Connect first-party campaign tracking propos
 
 ## Scope
 
-- Installed only on the two canonical campaign pages: index.html and aged-care-provider-partnership.html.
+- Installed on all four HTML pages in the deployed ENP static-site folder: index.html, aged-care-provider-partnership.html, homepage-review.html and provider-landing-review.html. This preserves recipient association if a visitor follows internal links between any of these pages.
 - The referral token is removed from the address bar synchronously before GA4 loads, so it is not included in GA4's page_location.
 - When explicitly enabled, an opaque token is held in tab-scoped session storage and sent only to the Connect activity endpoint.
 - Events contain a pathname and, for selected controls, a static category (callback or book-conversation). No name, email, phone number, query string, fragment or full URL is sent.
